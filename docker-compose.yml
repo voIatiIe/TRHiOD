@@ -1,0 +1,58 @@
+version: '3.6'
+
+services:
+  redis-0:
+    build: .
+    volumes:
+      - ./data:/data
+    environment:
+      REDIS_ARGS: | 
+        --requirepass ${REDIS_PASSWORD} 
+        --dbfilename dump-${REDIS_CLUSTER_ID}.rdb
+        --appendonly yes
+        --appendfilename appendonly-${REDIS_CLUSTER_ID}.aof
+    ports:
+      - "${REDIS_OUTER_PORT_0}:6379"
+    networks:
+      - redis
+    container_name: redis-${REDIS_CLUSTER_ID}-0
+
+  redis-1:
+    build: .
+    volumes:
+      - ./data:/data
+    environment:
+      REDIS_ARGS: |
+       --replicaof ${REDIS_HOST} ${REDIS_PORT} 
+       --masterauth ${REDIS_PASSWORD} 
+       --requirepass ${REDIS_PASSWORD}
+       --dbfilename dump-${REDIS_CLUSTER_ID}.rdb
+       --appendonly yes
+       --appendfilename appendonly-${REDIS_CLUSTER_ID}.aof
+    ports:
+      - "${REDIS_OUTER_PORT_1}:6379"
+    networks:
+      - redis
+    container_name: redis-${REDIS_CLUSTER_ID}-1
+  
+  redis-2:
+    build: .
+    volumes:
+      - ./data:/data
+    environment:
+      REDIS_ARGS: |
+        --replicaof ${REDIS_HOST} ${REDIS_PORT} 
+        --masterauth ${REDIS_PASSWORD} 
+        --requirepass ${REDIS_PASSWORD}
+        --dbfilename dump-${REDIS_CLUSTER_ID}.rdb
+        --appendonly yes
+        --appendfilename appendonly-${REDIS_CLUSTER_ID}.aof
+    ports:
+      - "${REDIS_OUTER_PORT_2}:6379"
+    networks:
+      - redis
+    container_name: redis-${REDIS_CLUSTER_ID}-2
+
+networks:
+  redis:
+    driver: bridge
