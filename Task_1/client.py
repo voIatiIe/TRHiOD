@@ -17,8 +17,10 @@ class BCOL:
 
 
 def fetch_from_shard(from_time, to_time, interval, shard):
-    for port in PORTS[shard]:
+    print(f'Shard {shard}'.center(25, '-'))
+    for i, port in enumerate(PORTS[shard]):
         try:
+            port_str = f'{port}({"replica" if i else "master"})'
             res = {}
             conn = redis.StrictRedis(host='localhost', port=port, db=0, password='pass_word').ts()
 
@@ -36,11 +38,11 @@ def fetch_from_shard(from_time, to_time, interval, shard):
                     else:
                         res[el[0]].update({key: el[1]})
             
-            print(f'{port} -> {BCOL.BOLD}{BCOL.OK}success{BCOL.ENDC}')
+            print(f'{port_str} -> {BCOL.BOLD}{BCOL.OK}success{BCOL.ENDC}')
 
             return res
         except (redis.exceptions.ConnectionError, redis.exceptions.TimeoutError) as e:
-            print(f'{port} -> {BCOL.BOLD}{BCOL.FAIL}error{BCOL.ENDC}')
+            print(f'{port_str} -> {BCOL.BOLD}{BCOL.FAIL}error{BCOL.ENDC}')
             continue
     
     raise redis.exceptions.ConnectionError(f'{BCOL.BOLD}{BCOL.FAIL}No connection to shard {shard}{BCOL.ENDC}')
@@ -56,6 +58,7 @@ def fetch_from_shards(from_time, to_time, interval):
         data.update(
             fetch_from_shard(BREAKPOINT + right_remaining, to_time, interval, shard=1)
         )
+    print('-'*25)
 
     return data
 
