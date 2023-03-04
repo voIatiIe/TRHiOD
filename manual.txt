@@ -1,0 +1,7 @@
+redis-stack-server --port 7000 --requirepass pass_word --dbfilename dump-redis-0-master.rdb --appendonly yes --appendfilename appendonly-master-0.aof
+redis-stack-server --port 7001 --requirepass pass_word --dbfilename dump-redis-0-replica-0.rdb --appendonly yes --appendfilename appendonly-dump-redis-0-replica-0.aof --replicaof 127.0.0.1 7000 --masterauth pass_word
+redis-stack-server --port 7002 --requirepass pass_word --dbfilename dump-redis-0-replica-1.rdb --appendonly yes --appendfilename appendonly-dump-redis-0-replica-1.aof --replicaof 127.0.0.1 7000 --masterauth pass_word
+
+redis-stack-server --port 7003 --requirepass pass_word --dbfilename dump-redis-1-master.rdb --appendonly yes --appendfilename appendonly-master-1.aof
+redis-stack-server --port 7004 --requirepass pass_word --dbfilename dump-redis-1-replica-0.rdb --appendonly yes --appendfilename appendonly-dump-redis-1-replica-0.aof --replicaof 127.0.0.1 7003 --masterauth pass_word
+redis-stack-server --port 7005 --requirepass pass_word --dbfilename dump-redis-1-replica-1.rdb --appendonly yes --appendfilename appendonly-dump-redis-1-replica-1.aof --replicaof 127.0.0.1 7003 --masterauth pass_word

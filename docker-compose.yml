@@ -1,58 +1,123 @@
 version: '3.6'
 
 services:
-  redis-0:
+  # ----- shard 1 -----
+
+  redis-0-master:
     build: .
     volumes:
       - ./data:/data
     environment:
       REDIS_ARGS: | 
         --requirepass ${REDIS_PASSWORD} 
-        --dbfilename dump-${REDIS_CLUSTER_ID}.rdb
-        --appendonly yes
-        --appendfilename appendonly-${REDIS_CLUSTER_ID}.aof
+        --dbfilename dump-redis-0-master.rdb 
+        --appendonly yes 
+        --appendfilename appendonly-master-0.aof
     ports:
-      - "${REDIS_OUTER_PORT_0}:6379"
+      - "7000:6379"
     networks:
-      - redis
-    container_name: redis-${REDIS_CLUSTER_ID}-0
+      redis:
+        ipv4_address: 118.0.0.10
+    container_name: redis-0-master
 
-  redis-1:
+  redis-0-replica-0:
     build: .
     volumes:
       - ./data:/data
     environment:
       REDIS_ARGS: |
-       --replicaof ${REDIS_HOST} ${REDIS_PORT} 
-       --masterauth ${REDIS_PASSWORD} 
-       --requirepass ${REDIS_PASSWORD}
-       --dbfilename dump-${REDIS_CLUSTER_ID}.rdb
-       --appendonly yes
-       --appendfilename appendonly-${REDIS_CLUSTER_ID}.aof
-    ports:
-      - "${REDIS_OUTER_PORT_1}:6379"
-    networks:
-      - redis
-    container_name: redis-${REDIS_CLUSTER_ID}-1
-  
-  redis-2:
-    build: .
-    volumes:
-      - ./data:/data
-    environment:
-      REDIS_ARGS: |
-        --replicaof ${REDIS_HOST} ${REDIS_PORT} 
+        --replicaof 118.0.0.10 6379 
         --masterauth ${REDIS_PASSWORD} 
-        --requirepass ${REDIS_PASSWORD}
-        --dbfilename dump-${REDIS_CLUSTER_ID}.rdb
-        --appendonly yes
-        --appendfilename appendonly-${REDIS_CLUSTER_ID}.aof
+        --requirepass ${REDIS_PASSWORD} 
+        --dbfilename dump-redis-0-replica-0.rdb 
+        --appendonly yes 
+        --appendfilename appendonly-0-replica-0.aof
     ports:
-      - "${REDIS_OUTER_PORT_2}:6379"
+      - "7001:6379"
     networks:
-      - redis
-    container_name: redis-${REDIS_CLUSTER_ID}-2
+      redis:
+        ipv4_address: 118.0.0.11
+    container_name: redis-0-replica-0
+  
+  redis-0-replica-1:
+    build: .
+    volumes:
+      - ./data:/data
+    environment:
+      REDIS_ARGS: |
+        --replicaof 118.0.0.10 6379 
+        --masterauth ${REDIS_PASSWORD} 
+        --requirepass ${REDIS_PASSWORD} 
+        --dbfilename dump-redis-0-replica-1.rdb 
+        --appendonly yes 
+        --appendfilename appendonly-0-replica-1.aof
+    ports:
+      - "7002:6379"
+    networks:
+      redis:
+        ipv4_address: 118.0.0.12
+    container_name: redis-0-replica-1
+  
+  # ----- shard 2 -----
+
+  redis-1-master:
+    build: .
+    volumes:
+      - ./data:/data
+    environment:
+      REDIS_ARGS: | 
+        --requirepass ${REDIS_PASSWORD} 
+        --dbfilename dump-redis-1-master.rdb 
+        --appendonly yes 
+        --appendfilename appendonly-master-1.aof
+    ports:
+      - "7003:6379"
+    networks:
+      redis:
+        ipv4_address: 118.0.0.13
+    container_name: redis-1-master
+
+  redis-1-replica-0:
+    build: .
+    volumes:
+      - ./data:/data
+    environment:
+      REDIS_ARGS: |
+        --replicaof 118.0.0.13 6379 
+        --masterauth ${REDIS_PASSWORD} 
+        --requirepass ${REDIS_PASSWORD} 
+        --dbfilename dump-redis-1-replica-0.rdb 
+        --appendonly yes 
+        --appendfilename appendonly-1-replica-0.aof
+    ports:
+      - "7004:6379"
+    networks:
+      redis:
+        ipv4_address: 118.0.0.14
+    container_name: redis-1-replica-0
+  
+  redis-1-replica-1:
+    build: .
+    volumes:
+      - ./data:/data
+    environment:
+      REDIS_ARGS: |
+        --replicaof 118.0.0.13 6379 
+        --masterauth ${REDIS_PASSWORD} 
+        --requirepass ${REDIS_PASSWORD} 
+        --dbfilename dump-redis-1-replica-1.rdb 
+        --appendonly yes 
+        --appendfilename appendonly-1-replica-1.aof
+    ports:
+      - "7005:6379"
+    networks:
+      redis:
+        ipv4_address: 118.0.0.15
+    container_name: redis-1-replica-1
 
 networks:
   redis:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 118.0.0.0/24
