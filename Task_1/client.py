@@ -9,12 +9,19 @@ PORTS = [
 ]
 
 
+class BCOL:
+    OK = '\033[92m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+
+
 def fetch_from_shard(from_time, to_time, interval, shard):
     for port in PORTS[shard]:
-        print(port)
         try:
             res = {}
             conn = redis.StrictRedis(host='localhost', port=port, db=0, password='pass_word').ts()
+
             for key in ['temperature', 'pressure', 'humidity']:
                 data = conn.range(
                     key,
@@ -28,12 +35,15 @@ def fetch_from_shard(from_time, to_time, interval, shard):
                         res[el[0]] = {key: el[1]}
                     else:
                         res[el[0]].update({key: el[1]})
+            
+            print(f'{port} -> {BCOL.BOLD}{BCOL.OK}success{BCOL.ENDC}')
 
             return res
         except (redis.exceptions.ConnectionError, redis.exceptions.TimeoutError) as e:
+            print(f'{port} -> {BCOL.BOLD}{BCOL.FAIL}error{BCOL.ENDC}')
             continue
     
-    raise redis.exceptions.ConnectionError('No connection')
+    raise redis.exceptions.ConnectionError(f'{BCOL.BOLD}{BCOL.FAIL}No connection to shard {shard}{BCOL.ENDC}')
 
 
 def fetch_from_shards(from_time, to_time, interval):
@@ -49,6 +59,7 @@ def fetch_from_shards(from_time, to_time, interval):
 
     return data
 
+# > 1 1 2000 1 1 3000 160
 # interval = 160 (9600s)
 # 1556092800 -> 1602249600
 # 1602259200 -> 1648147200
@@ -83,4 +94,24 @@ while True:
     else:
         res = fetch_from_shard(from_time, to_time, interval, shard=1)
 
-    print(res)
+    if res:
+        headers = list(list(res.items())[0][1].keys())
+        print(' '*20 + '| timestamp  | ' + ' | '.join(headers))
+
+        for key, data in res.items():
+            values = []
+            for header in headers:
+                value = data[header]
+
+                prefix = ' ' if value >= 0 else ''
+                rightadd = 1 if prefix else 0
+
+                rightlen = len(header) - len(str(value)) - rightadd
+                value = f'{prefix}{value}{" "*rightlen}'
+                values.append(value)
+
+            print(
+                f'{datetime.datetime.utcfromtimestamp(key + 3*3600).strftime("%Y-%m-%d %H:%M:%S")}'
+                f' | {key} | '
+                f'{" | ".join(values)}'
+            )
