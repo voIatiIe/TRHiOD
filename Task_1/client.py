@@ -44,8 +44,11 @@ def fetch_from_shard(from_time, to_time, interval, shard):
         except (redis.exceptions.ConnectionError, redis.exceptions.TimeoutError) as e:
             print(f'{port_str} -> {BCOL.BOLD}{BCOL.FAIL}error{BCOL.ENDC}')
             continue
+        except redis.exceptions.ResponseError as e:
+            print(f'{port_str} -> {BCOL.BOLD}{BCOL.FAIL}not found{BCOL.ENDC}')
+            continue
     
-    raise redis.exceptions.ConnectionError(f'{BCOL.BOLD}{BCOL.FAIL}No connection to shard {shard}{BCOL.ENDC}')
+    raise redis.exceptions.ConnectionError(f'{BCOL.BOLD}{BCOL.FAIL}Error! (shard {shard}){BCOL.ENDC}')
 
 
 def fetch_from_shards(from_time, to_time, interval):
